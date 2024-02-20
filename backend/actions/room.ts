@@ -12,7 +12,8 @@ export const createRoom = (ws: WebSocket) => {
       id: currentUser.id,
       ws,
       name: currentUser.name,
-    }]
+    }],
+    ships: []
   }
   ROOMS_DB.set(newRoom.id, newRoom)
   currentUser.roomID = newRoom.id
@@ -36,18 +37,16 @@ export const addUserToRoom = (ws: WebSocket, roomId: number) => {
 
   updateRoomsForAll();
 
-  room.roomUsers.forEach((user) => {
+  room?.roomUsers.forEach((user, i) => {
     user.ws.send(JSON.stringify({
       type: "create_game",
       data: JSON.stringify({
         idGame: room.id,
-        idPlayer: user.id,
+        idPlayer: i,
       }),
       id: 0,
     }))
   });
-
-  console.log('addUserToRoom');
 }
 
 export const updateRoomsForAll = () => {

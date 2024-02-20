@@ -14,7 +14,18 @@ export type Action = {
   id: number;
 }
 
+export type Ship = {
+  position: {
+    x: number;
+    y: number;
+  };
+  direction: boolean;
+  length: number;
+  type: "small" | "medium" | "large" | "huge";
+}
+
 export type Room = {
   id: number;
-  roomUsers: Omit<User, 'password'>[];
+  roomUsers: (Omit<User, 'password'>)[];
+  ships: Ship[][]
 }

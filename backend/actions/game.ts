@@ -1,5 +1,6 @@
 import { ROOMS_DB } from "..";
 import { Room } from "../types";
+import { updateRoomsForAll } from "./room";
 
 export const startGame = (roomID: number) => {
   const room = ROOMS_DB.get(roomID);
@@ -16,6 +17,23 @@ export const startGame = (roomID: number) => {
   });
 
   turnUser(roomID);
+}
+
+export const finishGame = (roomID: number, winnerID: number) => {
+  const room = ROOMS_DB.get(roomID);
+
+  room?.roomUsers.forEach((user, i) => {
+    user.ws.send(JSON.stringify({
+      type: "finish",
+      data: JSON.stringify({
+        winPlayer: winnerID,
+      }),
+      id: 0,
+    }))
+  });
+  
+  ROOMS_DB.delete(roomID);
+  updateRoomsForAll();
 }
 
 export const turnUser = (roomID: number) => {

@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Action, Room, User } from './types';
 import { registration } from './actions/registration';
 import { addUserToRoom, createRoom, updateRoomsForAll } from './actions/room';
-import { startGame } from './actions/game';
+import { finishGame, startGame } from './actions/game';
 
 export const USERS_DB = new Map<WebSocket, User>();
 export const ROOMS_DB = new Map<number, Room>();
@@ -49,10 +49,12 @@ wss.on('connection', (ws) => {
   });
   
   ws.on('close', () => {
+    const user = USERS_DB.get(ws);
     const roomID = USERS_DB.get(ws)?.roomID;
     if (typeof roomID === 'number') {
-      ROOMS_DB.delete(roomID);
-      updateRoomsForAll();
+      const room = ROOMS_DB.get(roomID) as Room;
+      const winnerID = room.roomUsers.findIndex((roomUser) => roomUser.id !== user?.id);
+      finishGame(roomID, winnerID);
     }
     USERS_DB.delete(ws)
   })

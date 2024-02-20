@@ -10,34 +10,66 @@ export const createRoom = (ws: WebSocket) => {
     id: roomIdCounter++,
     roomUsers: [{
       id: currentUser.id,
+      ws,
       name: currentUser.name,
     }]
   }
   ROOMS_DB.set(newRoom.id, newRoom)
   currentUser.roomID = newRoom.id
   
-  // send rooms for all
   updateRoomsForAll()
+}
+
+export const addUserToRoom = (ws: WebSocket, roomId: number) => {
+  const room = ROOMS_DB.get(roomId) as Room;
+  const connectingUser = USERS_DB.get(ws) as User;
+  if (room?.roomUsers[0].id === connectingUser?.id) {
+    console.log('The user is already in the room');
+    return
+  }
+  connectingUser.roomID = room?.id;
+  room?.roomUsers.push({
+    id: connectingUser.id,
+    ws,
+    name: connectingUser.name,
+  })
+
+  updateRoomsForAll();
+
+  room.roomUsers.forEach((user) => {
+    user.ws.send(JSON.stringify({
+      type: "create_game",
+      data: JSON.stringify({
+        idGame: room.id,
+        idPlayer: user.id,
+      }),
+      id: 0,
+    }))
+  });
+
+  console.log('addUserToRoom');
 }
 
 export const updateRoomsForAll = () => {
   Array.from(USERS_DB.keys()).forEach((ws) => updateRooms(ws))
 }
 
-export const updateRooms = (ws: WebSocket) => ws.send(JSON.stringify({
-  type: "update_room",
-  data: JSON.stringify(
-    Array.from(ROOMS_DB.values())
-      .filter((room) => room.roomUsers.length === 1)
-      .map((room) => ({
-        roomID: room.id,
-        roomUsers: [
-          {
-            name: room.roomUsers[0].name,
-            index: room.roomUsers[0].id,
-          }
-        ]
-      }))
-  ),
-  id: 0,
-}))
+export const updateRooms = (ws: WebSocket) => {
+  const preparedRooms = Array.from(ROOMS_DB.values())
+    .filter((room) => room.roomUsers.length === 1)
+    .map((room) => ({
+      roomId: room.id,
+      roomUsers: [
+        {
+          name: room.roomUsers[0].name,
+          index: room.roomUsers[0].id,
+        }
+      ]
+    }))
+
+  ws.send(JSON.stringify({
+    type: "update_room",
+    data: JSON.stringify(preparedRooms),
+    id: 0,
+  }))
+}

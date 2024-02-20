@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Action, Room, User } from './types';
 import { registration } from './actions/registration';
-import { createRoom, updateRoomsForAll } from './actions/room';
+import { addUserToRoom, createRoom, updateRoomsForAll } from './actions/room';
 
 export const USERS_DB = new Map<WebSocket, User>();
 export const ROOMS_DB = new Map<number, Room>();
@@ -23,8 +23,13 @@ wss.on('connection', (ws) => {
         createRoom(ws);
         break;
       }
+      case 'add_user_to_room': {
+        const roomId = JSON.parse(action.data).indexRoom
+        addUserToRoom(ws, roomId);
+        break;
+      }
       default: {
-        console.log(action);        
+        console.log(action);     
         break;
       }
     }

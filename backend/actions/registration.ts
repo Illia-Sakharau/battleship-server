@@ -41,6 +41,7 @@ export const registration = ({ action, ws }: Props) => {
 
   const user = USERS_DB.set(ws, {
     id: idCounter++,
+    ws,
     ...data
   }).get(ws)  
   

@@ -1,15 +1,16 @@
 import { WebSocket } from 'ws';
 import { Action, User } from "../types";
+import { updateRooms } from './room';
+import { USERS_DB } from '..';
 
 type Props = {
   action: Action;
-  users: Map<WebSocket, User>;
   ws: WebSocket;
 }
 
 let idCounter = 0;
 
-export const registration = ({ action, users, ws }: Props) => {
+export const registration = ({ action, ws }: Props) => {
   const data = JSON.parse(action.data);
 
   if (data.name.length < 5 || data.password.length < 5) {
@@ -24,7 +25,7 @@ export const registration = ({ action, users, ws }: Props) => {
     }))
     return;
   }
-  const hasUserName = !Array.from(users.values()).every((user) => !(user.name === data.name))
+  const hasUserName = !Array.from(USERS_DB.values()).every((user) => !(user.name === data.name))
   if (hasUserName) {
     ws.send(JSON.stringify({
       type: "reg",
@@ -38,7 +39,7 @@ export const registration = ({ action, users, ws }: Props) => {
     return;
   }
 
-  const user = users.set(ws, {
+  const user = USERS_DB.set(ws, {
     id: idCounter++,
     ...data
   }).get(ws)  
@@ -52,5 +53,7 @@ export const registration = ({ action, users, ws }: Props) => {
       }),
     id: action.id,
   }))
+
+  updateRooms(ws);
   
 }

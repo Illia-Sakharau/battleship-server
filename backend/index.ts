@@ -1,8 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Action, User } from './types';
+import { Action, Room, User } from './types';
 import { registration } from './actions/registration';
+import { createRoom, updateRoomsForAll } from './actions/room';
 
-const users = new Map<WebSocket, User>();
+export const USERS_DB = new Map<WebSocket, User>();
+export const ROOMS_DB = new Map<number, Room>();
 
 const wss = new WebSocketServer({ port: 3000 }, () => {
   console.log('WS server started on ws://localhost:3000/');
@@ -14,10 +16,13 @@ wss.on('connection', (ws) => {
 
     switch (action.type) {
       case 'reg': {
-        registration({ action, users, ws });
+        registration({ action, ws });
         break;
       }
-
+      case 'create_room': {
+        createRoom(ws);
+        break;
+      }
       default: {
         console.log(action);        
         break;
@@ -26,15 +31,18 @@ wss.on('connection', (ws) => {
   });
   
   ws.on('close', () => {
-    users.delete(ws)
+    const roomID = USERS_DB.get(ws)?.roomID;
+    if (typeof roomID === 'number') {
+      ROOMS_DB.delete(roomID);
+      updateRoomsForAll();
+    }
+    USERS_DB.delete(ws)
   })
 
 });
 
 wss.on('close', (ws: WebSocket) => {
   wss.clients.forEach((client) => {
-    console.log();
-    
     client.close()
   })
 })

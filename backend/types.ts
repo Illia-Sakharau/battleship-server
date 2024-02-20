@@ -24,9 +24,19 @@ export type Ship = {
   type: "small" | "medium" | "large" | "huge";
 }
 
+export type ShipCell = {
+  value: number;
+  next: boolean;
+  prev: boolean;
+  direction: boolean;
+}
+
+export type Board = (number | ShipCell)[][]
+
 export type Room = {
   id: number;
   roomUsers: (Omit<User, 'password'>)[];
   ships: Ship[][];
+  boards: Board[];
   currentUser?: number;
 }

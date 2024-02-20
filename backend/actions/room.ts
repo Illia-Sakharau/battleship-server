@@ -13,7 +13,8 @@ export const createRoom = (ws: WebSocket) => {
       ws,
       name: currentUser.name,
     }],
-    ships: []
+    boards: [],
+    ships: [],
   }
   ROOMS_DB.set(newRoom.id, newRoom)
   currentUser.roomID = newRoom.id

@@ -16,7 +16,7 @@ export const startGame = (roomID: number) => {
     }))
   });
 
-  turnUser(roomID);
+  turnUser(roomID, 0);
 }
 
 export const finishGame = (roomID: number, winnerID: number) => {
@@ -36,9 +36,8 @@ export const finishGame = (roomID: number, winnerID: number) => {
   updateRoomsForAll();
 }
 
-export const turnUser = (roomID: number) => {
+export const turnUser = (roomID: number, nextUserId: number) => {
   const room = ROOMS_DB.get(roomID) as Room;
-  const nextUserId = room.currentUser === 0 ? 1 : 0;
 
   room?.roomUsers.forEach((user, i) => {
     user.ws.send(JSON.stringify({

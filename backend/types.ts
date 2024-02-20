@@ -27,5 +27,6 @@ export type Ship = {
 export type Room = {
   id: number;
   roomUsers: (Omit<User, 'password'>)[];
-  ships: Ship[][]
+  ships: Ship[][];
+  currentUser?: number;
 }

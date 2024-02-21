@@ -20,13 +20,13 @@ function findShipHead({ board, x, y }: Props) {
 
 export function killedShip({ board, x, y }: Props) {
   let [headX, headY] = findShipHead({ board, x, y });
-  let shipCell = board[headY][headX] as ShipCell;
+  let shipCell = board[headY][headX] as ShipCell | boolean;
   const cor = {
     start: { x: headX, y: headY },
     end: { x, y },
   }
 
-  while(typeof shipCell !== 'boolean') {
+  while(typeof shipCell !== 'boolean' && shipCell !== undefined) {
     if (!shipCell.value) {
       return false;
     }
@@ -38,8 +38,12 @@ export function killedShip({ board, x, y }: Props) {
       headX += 1;
       if (shipCell.next) cor.end.x = headX;
     }
-    
-    shipCell = board[headY][headX] as ShipCell;
+
+    if (headY < 10 && headX < 10) {
+      shipCell = board[headY][headX] as ShipCell;
+    } else {
+      shipCell = false
+    }
   }
   
   return cor;

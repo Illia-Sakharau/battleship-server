@@ -1,5 +1,6 @@
 import { ROOMS_DB } from "..";
 import { Room, ShipCell } from "../types";
+import { finishGameChecker } from "../utils/finishGameChecker";
 import { killedShip } from "../utils/killedShip";
 import { nextClosedCell } from "../utils/nextClosedCell";
 import { updateRoomsForAll } from "./room";
@@ -74,7 +75,7 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
       const attackedBoard = room.boards[attackedPlayer]
       attackedCell as ShipCell;
       attackedCell.value = true;
-      const killedShipCor = killedShip({ board: room.boards[attackedPlayer], x, y });
+      const killedShipCor = killedShip({ board: attackedBoard, x, y });
       if (killedShipCor) {        
         // Attack around
         for (let i = killedShipCor.start.x - 1; i <= killedShipCor.end.x + 1; i++) {
@@ -92,10 +93,16 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
           }
         }
         // Check finish
+        if (finishGameChecker(attackedBoard)) {
+          finishGame(gameId, indexPlayer)
+          // Add winner to table
+        } else {
+          turnUser(gameId, indexPlayer);
+        }
       } else {
         attackFeedback({ gameId, x, y, indexPlayer, status: 'shot' });
+        turnUser(gameId, indexPlayer);
       }
-      turnUser(gameId, indexPlayer);
     }
   }
 }

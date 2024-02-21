@@ -1,5 +1,6 @@
 import { ROOMS_DB } from "..";
 import { Room, ShipCell } from "../types";
+import { nextClosedCell } from "../utils/nextClosedCell";
 import { updateRoomsForAll } from "./room";
 
 export const startGame = (roomID: number) => {
@@ -63,7 +64,8 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
   const attackedPlayer = indexPlayer === 0 ? 1 : 0;
   const attackedCell = room.boards[attackedPlayer][y][x];
   if (room.currentUser === indexPlayer) {
-    if (typeof attackedCell === 'boolean') {
+    const isWater = typeof attackedCell === 'boolean';
+    if (isWater) {
       room.boards[attackedPlayer][y][x] = true;
       turnUser(gameId, attackedPlayer);
       attackFeedback({ gameId, x, y, indexPlayer, status: 'miss' });
@@ -74,6 +76,13 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
       attackFeedback({ gameId, x, y, indexPlayer, status: 'shot' });
     }
   }
+}
+
+export const randomAttack = (props: Omit<attackProps, 'x' | 'y'>) => {
+  const attackedPlayer = props.indexPlayer === 0 ? 1 : 0;
+  const board = (ROOMS_DB.get(props.gameId) as Room).boards[attackedPlayer];
+  const [x, y] = nextClosedCell(board);
+  attack( {...props, x, y});
 }
 
 const attackFeedback = ({ gameId, x, y, indexPlayer, status }: attackProps & {status: string}) => {

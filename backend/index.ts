@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Action, Room, Ship, User } from './types';
 import { registration } from './actions/registration';
 import { addUserToRoom, createRoom, updateRoomsForAll } from './actions/room';
-import { attack, finishGame, startGame } from './actions/game';
+import { attack, finishGame, randomAttack, startGame } from './actions/game';
 import { fillBoard } from './utils/fillBoard';
 
 export const USERS_DB = new Map<WebSocket, User>();
@@ -110,6 +110,11 @@ wss.on('connection', (ws) => {
       case 'attack': {
         const data = JSON.parse(action.data)
         attack(data);
+        break;
+      }
+      case 'randomAttack': {
+        const data = JSON.parse(action.data)
+        randomAttack(data);
         break;
       }
       default: {

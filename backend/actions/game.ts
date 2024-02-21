@@ -1,5 +1,6 @@
 import { ROOMS_DB } from "..";
 import { Room, ShipCell } from "../types";
+import { killedShip } from "../utils/killedShip";
 import { nextClosedCell } from "../utils/nextClosedCell";
 import { updateRoomsForAll } from "./room";
 
@@ -70,10 +71,31 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
       turnUser(gameId, attackedPlayer);
       attackFeedback({ gameId, x, y, indexPlayer, status: 'miss' });
     } else {
+      const attackedBoard = room.boards[attackedPlayer]
       attackedCell as ShipCell;
       attackedCell.value = true;
+      const killedShipCor = killedShip({ board: room.boards[attackedPlayer], x, y });
+      if (killedShipCor) {        
+        // Attack around
+        for (let i = killedShipCor.start.x - 1; i <= killedShipCor.end.x + 1; i++) {
+          for (let j = killedShipCor.start.y - 1; j <= killedShipCor.end.y + 1; j++ ) {
+            if (i >= 0 && i < 10 && j >= 0 && j < 10) {
+              
+              if (typeof attackedBoard[j][i] === 'boolean') {
+                attackedBoard[j][i] = true;
+                attackFeedback({ gameId, x: i, y: j, indexPlayer, status: 'miss' });
+              } else {
+                (attackedBoard[j][i] as ShipCell).value = true;
+                attackFeedback({ gameId, x: i, y: j, indexPlayer, status: 'killed' });
+              }
+            }
+          }
+        }
+        // Check finish
+      } else {
+        attackFeedback({ gameId, x, y, indexPlayer, status: 'shot' });
+      }
       turnUser(gameId, indexPlayer);
-      attackFeedback({ gameId, x, y, indexPlayer, status: 'shot' });
     }
   }
 }

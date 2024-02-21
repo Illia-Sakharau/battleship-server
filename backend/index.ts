@@ -8,76 +8,12 @@ import { fillBoard } from './utils/fillBoard';
 export const USERS_DB = new Map<WebSocket, User>();
 export const ROOMS_DB = new Map<number, Room>();
 
-// const testData: Ship[] = [
-//   {
-//     position: { x: 2, y: 4 },
-//     direction: true,
-//     type: 'huge',
-//     length: 4
-//   },
-//   {
-//     position: { x: 5, y: 3 },
-//     direction: false,
-//     type: 'large',
-//     length: 3
-//   },
-//   {
-//     position: { x: 6, y: 6 },
-//     direction: false,
-//     type: 'large',
-//     length: 3
-//   },
-//   {
-//     position: { x: 4, y: 1 },
-//     direction: false,
-//     type: 'medium',
-//     length: 2
-//   },
-//   {
-//     position: { x: 5, y: 8 },
-//     direction: false,
-//     type: 'medium',
-//     length: 2
-//   },
-//   {
-//     position: { x: 1, y: 9 },
-//     direction: false,
-//     type: 'medium',
-//     length: 2
-//   },
-//   {
-//     position: { x: 0, y: 5 },
-//     direction: false,
-//     type: 'small',
-//     length: 1
-//   },
-//   {
-//     position: { x: 0, y: 7 },
-//     direction: false,
-//     type: 'small',
-//     length: 1
-//   },
-//   {
-//     position: { x: 7, y: 0 },
-//     direction: true,
-//     type: 'small',
-//     length: 1
-//   },
-//   {
-//     position: { x: 4, y: 5 },
-//     direction: true,
-//     type: 'small',
-//     length: 1
-//   }
-// ]
 
 const wss = new WebSocketServer({ port: 3000 }, () => {
   console.log('WS server started on ws://localhost:3000/');
 });
 
 wss.on('connection', (ws) => {
-  // console.log(fillBoard(testData));
-  
   ws.on('message', (req) => {
     const action = JSON.parse(req.toString()) as Action;
 

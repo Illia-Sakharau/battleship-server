@@ -25,13 +25,13 @@ export type Ship = {
 }
 
 export type ShipCell = {
-  value: number;
+  value: boolean;
   next: boolean;
   prev: boolean;
   direction: boolean;
 }
 
-export type Board = (number | ShipCell)[][]
+export type Board = (boolean | ShipCell)[][]
 
 export type Room = {
   id: number;

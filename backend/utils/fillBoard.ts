@@ -1,7 +1,7 @@
 import { Board, Ship } from "../types";
 
 export function fillBoard(ships: Ship[]): Board {
-  const board = new Array(10).fill(0).map(() => Array(10).fill(0));
+  const board = new Array(10).fill(0).map(() => Array(10).fill(false));
 
   ships.forEach((ship) => {
     let x = ship.position.x;
@@ -11,7 +11,7 @@ export function fillBoard(ships: Ship[]): Board {
       const next = i < ship.length;
       const prev = i > 1;
       board[y][x] = {
-        value: 1,
+        value: false,
         next,
         prev,
         direction: ship.direction,

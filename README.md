@@ -1,1 +1,1 @@
-# battleship-server
+# battleship

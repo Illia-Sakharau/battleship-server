@@ -7,6 +7,7 @@ import { fillBoard } from './utils/fillBoard';
 
 export const USERS_DB = new Map<WebSocket, User>();
 export const ROOMS_DB = new Map<number, Room>();
+export const WINNERS_DB = new Map<string, number>();
 
 
 const wss = new WebSocketServer({ port: 3000 }, () => {

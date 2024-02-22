@@ -1,5 +1,6 @@
-import { ROOMS_DB } from "..";
-import { Room, ShipCell } from "../types";
+import { WebSocket } from 'ws';
+import { ROOMS_DB, USERS_DB, WINNERS_DB } from "..";
+import { Room, ShipCell, User } from "../types";
 import { finishGameChecker } from "../utils/finishGameChecker";
 import { killedShip } from "../utils/killedShip";
 import { nextClosedCell } from "../utils/nextClosedCell";
@@ -23,9 +24,13 @@ export const startGame = (roomID: number) => {
 }
 
 export const finishGame = (roomID: number, winnerID: number) => {
-  const room = ROOMS_DB.get(roomID);
+  const room = ROOMS_DB.get(roomID) as Room;
+  const winnerName = room.roomUsers[winnerID].name;
+  const currentWins = WINNERS_DB.get(winnerName);
 
   room?.roomUsers.forEach((user, i) => {
+    (USERS_DB.get(user.ws) as User).roomID = undefined;
+    
     user.ws.send(JSON.stringify({
       type: "finish",
       data: JSON.stringify({
@@ -34,9 +39,29 @@ export const finishGame = (roomID: number, winnerID: number) => {
       id: 0,
     }))
   });
+
+  if (currentWins) {
+    WINNERS_DB.set(winnerName, currentWins + 1)
+  } else {
+    WINNERS_DB.set(winnerName, 1)
+  }
   
   ROOMS_DB.delete(roomID);
+  updateWinnersForAll();
   updateRoomsForAll();
+}
+
+const updateWinnersForAll = () => {
+  Array.from(USERS_DB.keys()).forEach((ws) => updateWinners(ws))
+}
+
+export const updateWinners = (ws: WebSocket) => {
+  const preparedWinners = Array.from(WINNERS_DB.entries()).map((value) => ({ name: value[0], wins: value[1]}));
+  ws.send(JSON.stringify({
+    type: "update_winners",
+    data: JSON.stringify(preparedWinners),
+    id: 0,
+  }))
 }
 
 export const turnUser = (roomID: number, nextUserId: number) => {
@@ -95,7 +120,6 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
         // Check finish
         if (finishGameChecker(attackedBoard)) {
           finishGame(gameId, indexPlayer)
-          // Add winner to table
         } else {
           turnUser(gameId, indexPlayer);
         }

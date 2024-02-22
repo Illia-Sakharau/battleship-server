@@ -2,6 +2,7 @@ import { WebSocket } from 'ws';
 import { Action, User } from "../types";
 import { updateRooms } from './room';
 import { USERS_DB } from '..';
+import { updateWinners } from './game';
 
 type Props = {
   action: Action;
@@ -55,6 +56,6 @@ export const registration = ({ action, ws }: Props) => {
     id: action.id,
   }))
 
+  updateWinners(ws);
   updateRooms(ws);
-  
 }

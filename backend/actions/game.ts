@@ -6,12 +6,14 @@ import { killedShip } from "../utils/killedShip";
 import { nextClosedCell } from "../utils/nextClosedCell";
 import { updateRoomsForAll } from "./room";
 
+const BOT_STEP_DELAY = 250;
+
 export const startGame = (roomID: number) => {
   const room = ROOMS_DB.get(roomID) as Room;
-  const currentPlayerId = 0;
+  const currentPlayerId = room.currentUser || 0;
 
   room?.roomUsers.forEach((user, i) => {
-    user.ws.send(JSON.stringify({
+    user.ws?.send(JSON.stringify({
       type: "start_game",
       data: JSON.stringify({
         ships: room.ships[i],
@@ -29,9 +31,12 @@ export const finishGame = (roomID: number, winnerID: number) => {
   const currentWins = WINNERS_DB.get(winnerName);
 
   room?.roomUsers.forEach((user, i) => {
-    (USERS_DB.get(user.ws) as User).roomID = undefined;
+    const userWS = user.ws;
+    if (userWS) {
+      (USERS_DB.get(userWS) as User).roomID = undefined;
+    }
     
-    user.ws.send(JSON.stringify({
+    user.ws?.send(JSON.stringify({
       type: "finish",
       data: JSON.stringify({
         winPlayer: winnerID,
@@ -69,7 +74,7 @@ export const turnUser = (roomID: number, nextUserId: number) => {
   room.currentUser = nextUserId;
   
   room?.roomUsers.forEach((user) => {
-    user.ws.send(JSON.stringify({
+    user.ws?.send(JSON.stringify({
       type: "turn",
       data: JSON.stringify({
         currentPlayer: nextUserId,
@@ -88,14 +93,18 @@ type attackProps = {
 
 export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
   const room = ROOMS_DB.get(gameId) as Room;
+  if (!room) return;
   const attackedPlayer = indexPlayer === 0 ? 1 : 0;
   const attackedCell = room.boards[attackedPlayer][y][x];
   if (room.currentUser === indexPlayer) {
     const isWater = typeof attackedCell === 'boolean';
     if (isWater) {
       room.boards[attackedPlayer][y][x] = true;
-      turnUser(gameId, attackedPlayer);
       attackFeedback({ gameId, x, y, indexPlayer, status: 'miss' });
+      turnUser(gameId, attackedPlayer);
+      if (!room.roomUsers[attackedPlayer].ws) {
+        setTimeout(randomAttack, BOT_STEP_DELAY, { gameId, indexPlayer: attackedPlayer});
+      }
     } else {
       const attackedBoard = room.boards[attackedPlayer]
       attackedCell as ShipCell;
@@ -122,10 +131,16 @@ export const attack = ({ gameId, x, y, indexPlayer }: attackProps) => {
           finishGame(gameId, indexPlayer)
         } else {
           turnUser(gameId, indexPlayer);
+          if (!room.roomUsers[indexPlayer].ws) {
+            setTimeout(randomAttack, BOT_STEP_DELAY, { gameId, indexPlayer});
+          }
         }
       } else {
         attackFeedback({ gameId, x, y, indexPlayer, status: 'shot' });
         turnUser(gameId, indexPlayer);
+        if (!room.roomUsers[indexPlayer].ws) {
+          setTimeout(randomAttack, BOT_STEP_DELAY, { gameId, indexPlayer});
+        }
       }
     }
   }
@@ -141,7 +156,7 @@ export const randomAttack = (props: Omit<attackProps, 'x' | 'y'>) => {
 const attackFeedback = ({ gameId, x, y, indexPlayer, status }: attackProps & {status: string}) => {
   const room = ROOMS_DB.get(gameId) as Room;
   room?.roomUsers.forEach((user) => {
-    user.ws.send(JSON.stringify({
+    user.ws?.send(JSON.stringify({
       type: "attack",
       data: JSON.stringify({
         position: {x, y},

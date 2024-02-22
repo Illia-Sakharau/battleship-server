@@ -2,7 +2,7 @@ import { WebSocket } from 'ws';
 
 export type User = {
   id: number;
-  ws: WebSocket;
+  ws?: WebSocket;
   name: string;
   password: string;
   roomID?: number; 

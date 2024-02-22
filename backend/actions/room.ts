@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws';
 import { Room, User } from "../types";
 import { ROOMS_DB, USERS_DB } from '..';
+import { SHIPS_AND_BOARDS } from '../shipsForBot';
 
 let roomIdCounter = 0;
 
@@ -22,6 +23,40 @@ export const createRoom = (ws: WebSocket) => {
   updateRoomsForAll()
 }
 
+export const createSingleRoom = (ws: WebSocket) => {
+  const currentUser = USERS_DB.get(ws) as User;
+  const playerId = 1;
+  const mapNumber = Math.floor(Math.random() * SHIPS_AND_BOARDS.length);
+  const newRoom: Room = {
+    id: roomIdCounter++,
+    roomUsers: [
+      {
+        id: -1,
+        name: '**BOT**'
+      },
+      {
+        id: currentUser.id,
+        ws,
+        name: currentUser.name,
+      }
+  ],
+    boards: [SHIPS_AND_BOARDS[mapNumber].board],
+    ships: [SHIPS_AND_BOARDS[mapNumber].ships],
+    currentUser: playerId,
+  }
+  ROOMS_DB.set(newRoom.id, newRoom)
+  currentUser.roomID = newRoom.id
+
+  ws.send(JSON.stringify({
+    type: "create_game",
+    data: JSON.stringify({
+      idGame: newRoom.id,
+      idPlayer: playerId,
+    }),
+    id: 0,
+  }))
+}
+
 export const addUserToRoom = (ws: WebSocket, roomId: number) => {
   const room = ROOMS_DB.get(roomId) as Room;
   const connectingUser = USERS_DB.get(ws) as User;
@@ -39,7 +74,7 @@ export const addUserToRoom = (ws: WebSocket, roomId: number) => {
   updateRoomsForAll();
 
   room?.roomUsers.forEach((user, i) => {
-    user.ws.send(JSON.stringify({
+    user.ws?.send(JSON.stringify({
       type: "create_game",
       data: JSON.stringify({
         idGame: room.id,
